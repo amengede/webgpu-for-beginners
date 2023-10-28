@@ -6,12 +6,11 @@
   "scripts": {
     "start": "npm run install-missing-dependencies && npm run serve",
     "install-missing-dependencies": "npm i",
-    "serve": "http-server"
+    "serve": "live-server --cors"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "http-server": "^14.1.0"
   }
 }
