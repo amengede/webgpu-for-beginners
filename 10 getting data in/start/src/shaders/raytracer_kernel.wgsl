@@ -10,11 +10,15 @@ struct Ray {
     origin: vec3<f32>,
 }
 
-@compute @workgroup_size(1,1,1)
+@compute @workgroup_size(8,8,1)
 fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
 
-    let screen_size: vec2<i32> = textureDimensions(color_buffer);
+    let screen_size: vec2<i32> = vec2<i32>(textureDimensions(color_buffer));
     let screen_pos : vec2<i32> = vec2<i32>(i32(GlobalInvocationID.x), i32(GlobalInvocationID.y));
+
+    if (screen_pos.x >= screen_size.x || screen_pos.y >= screen_size.y) {
+        return;
+    }
 
     let horizontal_coefficient: f32 = (f32(screen_pos.x) - f32(screen_size.x) / 2) / f32(screen_size.x);
     let vertical_coefficient: f32 = (f32(screen_pos.y) - f32(screen_size.y) / 2) / f32(screen_size.x);
