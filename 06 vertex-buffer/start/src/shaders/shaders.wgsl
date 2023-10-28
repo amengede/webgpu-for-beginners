@@ -3,7 +3,7 @@ struct Fragment {
     @location(0) Color : vec4<f32>
 };
 
-@stage(vertex)
+@vertex
 fn vs_main(@builtin(vertex_index) v_id: u32) -> Fragment {
 
     //pre-bake positions and colors, for now.
@@ -26,7 +26,7 @@ fn vs_main(@builtin(vertex_index) v_id: u32) -> Fragment {
     return output;
 }
 
-@stage(fragment)
+@fragment
 fn fs_main(@location(0) Color: vec4<f32>) -> @location(0) vec4<f32> {
     return Color;
 }
