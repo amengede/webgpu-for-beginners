@@ -1,1 +1,0 @@
-(()=>{"use strict";const e=document.getElementById("compatibility-label");navigator.gpu?e.innerText="WebGPU is supported on this browser":e.innerText="WebGPU is not supported on this browser"})();
