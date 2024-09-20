@@ -2,18 +2,16 @@ import { BindGroupBuilder } from "./bind_group";
 
 export class Framebuffer {
     
-    texture: GPUTexture;
-    view: GPUTextureView;
-    sampler: GPUSampler;
+    texture: GPUTexture
+    view: GPUTextureView
+    sampler: GPUSampler
     bindGroup: GPUBindGroup;
 
-    async initialize(device: GPUDevice, 
-        canvas: HTMLCanvasElement, 
-        bindGroupLayout: GPUBindGroupLayout,
-        format: GPUTextureFormat) {
+    async initialize(device: GPUDevice, canvas: HTMLCanvasElement, 
+        bindGroupLayout: GPUBindGroupLayout, format: GPUTextureFormat) {
 
-        const width = canvas.width;
-        const height = canvas.height;
+        var width = canvas.width;
+        var height = canvas.height;
 
         const textureDescriptor: GPUTextureDescriptor = {
             size: {
@@ -24,6 +22,7 @@ export class Framebuffer {
             format: format,
             usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT
         };
+
         this.texture = device.createTexture(textureDescriptor);
 
         const viewDescriptor: GPUTextureViewDescriptor = {
@@ -42,6 +41,8 @@ export class Framebuffer {
             addressModeV: "repeat",
             magFilter: "linear",
             minFilter: "linear",
+            mipmapFilter: "linear",
+            maxAnisotropy: 1
         };
         this.sampler = device.createSampler(samplerDescriptor);
 

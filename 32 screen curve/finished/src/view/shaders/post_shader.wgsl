@@ -30,5 +30,7 @@ fn vert_main(@builtin(vertex_index) VertexIndex : u32) -> VertexOutput {
 fn frag_main(@location(0) TexCoord : vec2<f32>) -> @location(0) vec4<f32> {
     //return textureSample(color_buffer, screen_sampler, TexCoord);
     var color: vec4<f32> = textureSample(color_buffer, screen_sampler, TexCoord);
-    return vec4<f32>(color.r * color.r, sqrt(color.g), cos(color.b), 1.0);
+    var purple: vec4<f32> = vec4<f32>(229.0 / 255.0, 173.0 / 255.0, 240.0 / 255.0, 1);
+    var intensity: f32 = 0.33333 * (color.r + color.g + color.b);
+    return intensity * purple;
 }

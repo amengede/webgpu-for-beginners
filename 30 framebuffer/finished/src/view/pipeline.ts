@@ -49,14 +49,13 @@ export class RenderPipelineBuilder {
         this.depthStencilState = depthStencil;
     }
 
-    async build(label: string): Promise<GPURenderPipeline> {
+    async build(): Promise<GPURenderPipeline> {
         
         var layout = this.device.createPipelineLayout({
             bindGroupLayouts: this.bindGroupLayouts
         });
     
         const pipeline = await this.device.createRenderPipeline({
-            label: label,
             vertex : {
                 module : this.device.createShaderModule({
                     code : this.src_code
