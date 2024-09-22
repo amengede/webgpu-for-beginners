@@ -6,27 +6,33 @@ export class RenderPipelineBuilder {
     vertex_entry: string;
     fragment_entry: string;
     buffers: GPUVertexBufferLayout[];
-    renderTargets: GPUColorTargetState[];
+    colorTargetStates: GPUColorTargetState[];
     depthStencilState: GPUDepthStencilState | undefined;
+    alpha_blend: boolean;
 
     constructor(device: GPUDevice) {
         this.bindGroupLayouts = [];
         this.device = device;
         this.buffers = [];
+        this.colorTargetStates = [];
         this.depthStencilState = undefined;
+        this.alpha_blend = false;
         this.reset();
     }
 
     reset() {
         this.bindGroupLayouts = [];
         this.buffers = [];
-        this.renderTargets = [];
     }
 
     async addBindGroupLayout(layout: GPUBindGroupLayout) {
 
         this.bindGroupLayouts.push(layout);
 
+    }
+
+    setBlendState(blend: boolean) {
+        this.alpha_blend = blend;
     }
 
     setSourceCode(src_code: string, vertex_entry: string, fragment_entry: string) {
@@ -39,26 +45,29 @@ export class RenderPipelineBuilder {
         this.buffers.push(vertexBufferLayout);
     }
 
-    addRenderTarget(format: GPUTextureFormat, blend: boolean) {
+    addRenderTarget(format: GPUTextureFormat) {
+
         var target: GPUColorTargetState = {
             format: format,
         };
 
-        if (blend) {
+        if (this.alpha_blend) {
             target.blend = {
                 color: {
                     operation: "add",
                     srcFactor: "src-alpha",
-                    dstFactor: "one-minus-src-alpha"
+                    dstFactor: "one-minus-src-alpha",
                 },
+
                 alpha: {
                     operation: "add",
                     srcFactor: "one",
                     dstFactor: "zero"
-                },
+                }
             };
         }
-        this.renderTargets.push(target);
+
+        this.colorTargetStates.push(target);
     }
 
     setDepthStencilState(depthStencil: GPUDepthStencilState) {
@@ -86,7 +95,7 @@ export class RenderPipelineBuilder {
                     code : this.src_code
                 }),
                 entryPoint : this.fragment_entry,
-                targets : this.renderTargets
+                targets : this.colorTargetStates
             },
     
             primitive : {

@@ -1,7 +1,7 @@
 import sky_shader from "./shaders/sky_shader.wgsl";
 import shader from "./shaders/shaders.wgsl";
 import post_shader from "./shaders/post_shader.wgsl"
-import screen_shader from "./shaders/screen_shader.wgsl"
+import screen_shader   from "./shaders/screen_shader.wgsl"
 import { TriangleMesh } from "./triangle_mesh";
 import { QuadMesh } from "./quad_mesh";
 import { mat4 } from "gl-matrix";
@@ -47,8 +47,8 @@ export class Renderer {
     objectBuffer: GPUBuffer;
     parameterBuffer: GPUBuffer;
     skyMaterial: CubeMapMaterial;
-    frameBuffer: Framebuffer;
     hudMaterial: Material;
+    frameBuffer: Framebuffer;
 
     constructor(canvas: HTMLCanvasElement){
         this.canvas = canvas;
@@ -92,8 +92,13 @@ export class Renderer {
 
     async setupDevice() {
 
+        //adapter: wrapper around (physical) GPU.
+        //Describes features and limits
         this.adapter = <GPUAdapter> await navigator.gpu?.requestAdapter();
+        //device: wrapper around GPU functionality
+        //Function calls are made through the device
         this.device = <GPUDevice> await this.adapter?.requestDevice();
+        //context: similar to vulkan instance (or OpenGL context)
         this.context = <GPUCanvasContext> this.canvas.getContext("webgpu");
         this.format = "bgra8unorm";
         this.context.configure({
@@ -158,9 +163,6 @@ export class Renderer {
         builder.addMaterial(GPUShaderStage.FRAGMENT, "2d");
         this.materialGroupLayout = await builder.build();
 
-        builder.addMaterial(GPUShaderStage.FRAGMENT, "2d");
-        this.frameGroupLayouts[pipeline_types.HUD] = await builder.build();
-
     }
 
     async makePipelines() {
@@ -168,26 +170,24 @@ export class Renderer {
         var builder: RenderPipelineBuilder = new RenderPipelineBuilder(this.device);
 
         builder.addBindGroupLayout(this.materialGroupLayout);
-        builder.setSourceCode(post_shader, "vert_main", "frag_main");
-        builder.addRenderTarget(this.format, false);
-        this.pipelines[pipeline_types.POST] = await builder.build("POST");
+        builder.setSourceCode(screen_shader, "vs_main", "fs_main");
+        builder.setBlendState(true);
+        builder.addRenderTarget(this.format);
+        this.pipelines[pipeline_types.HUD] = await builder.build("HUD");
 
         builder.addBindGroupLayout(this.materialGroupLayout);
-        builder.setSourceCode(screen_shader, "vert_main", "frag_main");
-        builder.addRenderTarget(this.format, true);
-        this.pipelines[pipeline_types.HUD] = await builder.build("HUD");
+        builder.setSourceCode(post_shader, "vs_main", "fs_main");
+        this.pipelines[pipeline_types.POST] = await builder.build("POST");
 
         builder.addBindGroupLayout(this.frameGroupLayouts[pipeline_types.STANDARD] as GPUBindGroupLayout);
         builder.addBindGroupLayout(this.materialGroupLayout);
         builder.setSourceCode(shader, "vs_main", "fs_main");
         builder.addVertexBufferDescription(this.triangleMesh.bufferLayout);
         builder.setDepthStencilState(this.depthStencilState);
-        builder.addRenderTarget(this.format, false);
         this.pipelines[pipeline_types.STANDARD] = await builder.build("STANDARD");
 
         builder.addBindGroupLayout(this.frameGroupLayouts[pipeline_types.SKY] as GPUBindGroupLayout);
         builder.setSourceCode(sky_shader, "sky_vert_main", "sky_frag_main");
-        builder.addRenderTarget(this.format, false);
         this.pipelines[pipeline_types.SKY] = await builder.build("SCREEN");
     }
 
@@ -380,17 +380,14 @@ export class Renderer {
                 storeOp: "store",
                 clearValue: {r: 0.1, g: 0.2, b: 0.4, a: 1.0}
             }],
-
         });
 
-        // World
         renderpass.setPipeline(this.pipelines[pipeline_types.POST] as GPURenderPipeline);
         renderpass.setBindGroup(0, this.frameBuffer.bindGroup);
         renderpass.draw(6, 1, 0, 0);
 
-        // HUD
         renderpass.setPipeline(this.pipelines[pipeline_types.HUD] as GPURenderPipeline);
-        renderpass.setBindGroup(0, this.hudMaterial.bindGroup);
+        renderpass.setBindGroup(0, this.hudMaterial.bindGroup); 
         renderpass.draw(6, 1, 0, 0);
 
         renderpass.end();

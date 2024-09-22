@@ -165,7 +165,7 @@ export class Renderer {
         var builder: RenderPipelineBuilder = new RenderPipelineBuilder(this.device);
 
         builder.addBindGroupLayout(this.materialGroupLayout);
-        builder.setSourceCode(post_shader, "vert_main", "frag_main");
+        builder.setSourceCode(post_shader, "vs_main", "fs_main");
         builder.addColorFormat(this.format);
         this.pipelines[pipeline_types.POST] = await builder.build("POST");
 
