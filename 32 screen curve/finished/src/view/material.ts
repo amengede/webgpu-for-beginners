@@ -7,8 +7,7 @@ export class Material {
     sampler: GPUSampler
     bindGroup: GPUBindGroup;
 
-    async initialize(device: GPUDevice, name: string, 
-        bindGroupLayout: GPUBindGroupLayout) {
+    async initialize(device: GPUDevice, name: string, bindGroupLayout: GPUBindGroupLayout) {
 
         var mipCount = 0;
         var width = 0;

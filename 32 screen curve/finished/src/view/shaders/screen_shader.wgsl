@@ -22,23 +22,20 @@ fn vert_main(@builtin(vertex_index) VertexIndex : u32) -> VertexOutput {
 
     var output : VertexOutput;
     output.Position = vec4<f32>(pos, 0.0, 1.0);
-    output.TexCoord = vec2<f32>(1, -1) * pos;
+    output.TexCoord = pos;
     return output;
 }
 
 @fragment
 fn frag_main(@location(0) TexCoord : vec2<f32>) -> @location(0) vec4<f32> {
-
     var pos: vec2<f32> = vec2<f32>(
         TexCoord.x, 
-        TexCoord.y + 0.2 * sin(TexCoord.y) * cos(TexCoord.x));
-
-    // Normalize
-    pos = vec2<f32>(0.5) * (vec2<f32>(1.0) + pos);
-
-    if (pos.y > 1.0 || pos.y < 0.0) {
+        0.85 * (TexCoord.y + 0.25 * sin(TexCoord.y) * cos(TexCoord.x)));
+    
+    if (pos.y < -1.0 || pos.y > 1.0) {
         discard;
     }
 
+    pos = vec2<f32>(0.5, -0.5) * (vec2<f32>(1.0) + pos);
     return textureSample(color_buffer, screen_sampler, pos);
 }
