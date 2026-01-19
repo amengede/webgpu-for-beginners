@@ -175,8 +175,8 @@ export class Renderer {
         const view = camera.get_view();
 
         this.device.queue.writeBuffer(this.objectBuffer, 0, triangles, 0, triangles.length);
-        this.device.queue.writeBuffer(this.uniformBuffer, 0, <ArrayBuffer>view); 
-        this.device.queue.writeBuffer(this.uniformBuffer, 64, <ArrayBuffer>projection); 
+        this.device.queue.writeBuffer(this.uniformBuffer, 0, <ArrayBuffer>(<unknown>view)); 
+        this.device.queue.writeBuffer(this.uniformBuffer, 64, <ArrayBuffer>(<unknown>projection)); 
         
         //command encoder: records draw commands for submission
         const commandEncoder : GPUCommandEncoder = this.device.createCommandEncoder();
