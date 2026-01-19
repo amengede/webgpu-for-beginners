@@ -293,12 +293,12 @@ export class Renderer {
         await this.quadMaterial.initialize(this.device, "dist/img/floor.jpg", this.materialGroupLayout);
 
         const urls = [
-            "dist/img/sky_back.png",  //x+
-            "dist/img/sky_front.png",   //x-
-            "dist/img/sky_left.png",   //y+
-            "dist/img/sky_right.png",  //y-
-            "dist/img/sky_top.png", //z+
-            "dist/img/sky_bottom.png",    //z-
+            "dist/img/red_sky_back.png",  //x+
+            "dist/img/red_sky_front.png",   //x-
+            "dist/img/red_sky_left.png",   //y+
+            "dist/img/red_sky_right.png",  //y-
+            "dist/img/red_sky_top.png", //z+
+            "dist/img/red_sky_bottom.png",    //z-
         ]
         this.skyMaterial = new CubeMapMaterial();
         await this.skyMaterial.initialize(this.device, urls);
@@ -359,11 +359,11 @@ export class Renderer {
 
         this.device.queue.writeBuffer(
             this.objectBuffer, 0, 
-            renderables.model_transforms, 0, 
+            <ArrayBuffer>(<unknown>renderables.model_transforms), 0, 
             renderables.model_transforms.length
         );
-        this.device.queue.writeBuffer(this.uniformBuffer, 0, <ArrayBuffer>view); 
-        this.device.queue.writeBuffer(this.uniformBuffer, 64, <ArrayBuffer>projection); 
+        this.device.queue.writeBuffer(this.uniformBuffer, 0, <ArrayBuffer>(<unknown>view)); 
+        this.device.queue.writeBuffer(this.uniformBuffer, 64, <ArrayBuffer>(<unknown>projection)); 
 
         const dy = Math.tan(Math.PI/8);
         const dx = dy * 800 / 600
