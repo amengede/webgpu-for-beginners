@@ -282,7 +282,9 @@ export class Renderer {
             sphereData[8*i + 7] = this.scene.spheres[i].radius;
         }
 
-        this.device.queue.writeBuffer(this.sphereBuffer, 0, sphereData, 0, 8 * this.scene.spheres.length);
+        this.device.queue.writeBuffer(this.sphereBuffer, 0,
+                                        <ArrayBuffer>(<unknown>sphereData),
+                                        0, 8 * this.scene.spheres.length);
     }
 
     render = () => {
