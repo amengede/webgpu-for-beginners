@@ -111,7 +111,7 @@ export class App {
         this.mouseYLabel.innerText = event.clientY.toString();
         
         this.scene.spin_player(
-            event.movementX / 5, event.movementY / 5
+            event.movementX / 5, -event.movementY / 5
         );
     }
 
