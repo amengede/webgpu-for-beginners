@@ -154,9 +154,9 @@ export class Renderer {
         mat4.rotate(model, model, this.t, [0,0,1]);
         
 
-        this.device.queue.writeBuffer(this.uniformBuffer, 0, <ArrayBuffer>model); 
-        this.device.queue.writeBuffer(this.uniformBuffer, 64, <ArrayBuffer>view); 
-        this.device.queue.writeBuffer(this.uniformBuffer, 128, <ArrayBuffer>projection); 
+        this.device.queue.writeBuffer(this.uniformBuffer, 0, <ArrayBuffer>(<unknown>model)); 
+        this.device.queue.writeBuffer(this.uniformBuffer, 64, <ArrayBuffer>(<unknown>view)); 
+        this.device.queue.writeBuffer(this.uniformBuffer, 128, <ArrayBuffer>(<unknown>projection)); 
 
         //command encoder: records draw commands for submission
         const commandEncoder : GPUCommandEncoder = this.device.createCommandEncoder();
