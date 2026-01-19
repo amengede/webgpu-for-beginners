@@ -47,7 +47,7 @@ export class Scene {
 
             var blank_matrix = mat4.create();
             for (var j: number = 0; j < 16; j++) {
-                this.object_data[16 * i + j] = <number>blank_matrix.at(j);
+                this.object_data[16 * i + j] = blank_matrix[j];
             }
             i++;
             this.triangle_count++;
@@ -66,7 +66,7 @@ export class Scene {
 
                 var blank_matrix = mat4.create();
                 for (var j: number = 0; j < 16; j++) {
-                    this.object_data[16 * i + j] = <number>blank_matrix.at(j);
+                    this.object_data[16 * i + j] = blank_matrix[j];
                 }
                 i++;
                 this.quad_count++;
@@ -83,7 +83,7 @@ export class Scene {
                 triangle.update();
                 var model = triangle.get_model();
                 for (var j: number = 0; j < 16; j++) {
-                    this.object_data[16 * i + j] = <number>model.at(j);
+                    this.object_data[16 * i + j] = model[j];
                 }
                 i++;
             }
@@ -94,7 +94,7 @@ export class Scene {
                 quad.update();
                 var model = quad.get_model();
                 for (var j: number = 0; j < 16; j++) {
-                    this.object_data[16 * i + j] = <number>model.at(j);
+                    this.object_data[16 * i + j] = model[j];
                 }
                 i++;
             }
@@ -103,7 +103,7 @@ export class Scene {
         this.statue.update();
         var model = this.statue.get_model();
         for (var j: number = 0; j < 16; j++) {
-            this.object_data[16 * i + j] = <number>model.at(j);
+            this.object_data[16 * i + j] = model[j];
         }
         i++;
 
