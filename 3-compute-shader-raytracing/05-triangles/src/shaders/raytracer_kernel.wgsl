@@ -31,7 +31,7 @@ struct BVH {
 }
 
 struct ObjectIndices {
-    primitiveIndices: array<f32>,
+    primitiveIndices: array<u32>,
 }
 
 struct Ray {
@@ -64,7 +64,7 @@ struct RenderState {
 @group(0) @binding(5) var skyTexture: texture_cube<f32>;
 @group(0) @binding(6) var skySampler: sampler;
 
-@compute @workgroup_size(1,1,1)
+@compute @workgroup_size(8,8,1)
 fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
 
     let screen_size: vec2<i32> = vec2<i32>(textureDimensions(color_buffer));
@@ -176,7 +176,7 @@ fn trace(ray: Ray) -> RenderState {
         
                 var newRenderState: RenderState = hit_triangle(
                     ray, 
-                    objects.triangles[u32(triangleLookup.primitiveIndices[i + contents])], 
+                    objects.triangles[triangleLookup.primitiveIndices[i + contents]], 
                     0.001, nearestHit, renderState
                 );
 
@@ -247,6 +247,9 @@ fn hit_triangle(ray: Ray, tri: Triangle, tMin: f32, tMax: f32, oldRenderState: R
     //Direction vectors
     let edge_ab: vec3<f32> = tri.corner_b - tri.corner_a;
     let edge_ac: vec3<f32> = tri.corner_c - tri.corner_a;
+    let edge_ba: vec3<f32> = -edge_ab;
+    let edge_ca: vec3<f32> = -edge_ac;
+    let edge_origin_a: vec3<f32> = tri.corner_a - ray.origin;
     //Normal of the triangle
     var n: vec3<f32> = normalize(cross(edge_ab, edge_ac));
     var ray_dot_tri: f32 = dot(ray.direction, n);
@@ -262,8 +265,8 @@ fn hit_triangle(ray: Ray, tri: Triangle, tMin: f32, tMax: f32, oldRenderState: R
 
     var system_matrix: mat3x3<f32> = mat3x3<f32>(
         ray.direction,
-        tri.corner_a - tri.corner_b,
-        tri.corner_a - tri.corner_c
+        edge_ba,
+        edge_ca
     );
     let denominator: f32 = determinant(system_matrix);
     if (abs(denominator) < 0.00001) {
@@ -272,8 +275,8 @@ fn hit_triangle(ray: Ray, tri: Triangle, tMin: f32, tMax: f32, oldRenderState: R
 
     system_matrix = mat3x3<f32>(
         ray.direction,
-        tri.corner_a - ray.origin,
-        tri.corner_a - tri.corner_c
+        edge_origin_a,
+        edge_ca
     );
     let u: f32 = determinant(system_matrix) / denominator;
     
@@ -283,8 +286,8 @@ fn hit_triangle(ray: Ray, tri: Triangle, tMin: f32, tMax: f32, oldRenderState: R
 
     system_matrix = mat3x3<f32>(
         ray.direction,
-        tri.corner_a - tri.corner_b,
-        tri.corner_a - ray.origin,
+        edge_ba,
+        edge_origin_a,
     );
     let v: f32 = determinant(system_matrix) / denominator;
     if (v < 0.0 || u + v > 1.0) {
@@ -292,9 +295,9 @@ fn hit_triangle(ray: Ray, tri: Triangle, tMin: f32, tMax: f32, oldRenderState: R
     }
 
     system_matrix = mat3x3<f32>(
-        tri.corner_a - ray.origin,
-        tri.corner_a - tri.corner_b,
-        tri.corner_a - tri.corner_c
+        edge_origin_a,
+        edge_ba,
+        edge_ca
     );
     let t: f32 = determinant(system_matrix) / denominator;
 
