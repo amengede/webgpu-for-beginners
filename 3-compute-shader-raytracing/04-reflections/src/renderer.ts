@@ -65,6 +65,7 @@ export class Renderer {
         //context: similar to vulkan instance (or OpenGL context)
         this.context = <GPUCanvasContext> this.canvas.getContext("webgpu");
         this.format = "bgra8unorm";
+        console.log(this.device);
         this.context.configure({
             device: this.device,
             format: this.format,
@@ -209,12 +210,12 @@ export class Renderer {
         );
 
         const urls = [
-            "dist/gfx/sky_front.png",  //x+
-            "dist/gfx/sky_back.png",   //x-
-            "dist/gfx/sky_left.png",   //y+
-            "dist/gfx/sky_right.png",  //y-
-            "dist/gfx/sky_bottom.png", //z+
-            "dist/gfx/sky_top.png",    //z-
+            "dist/img/green_sky_front.png",  //x+
+            "dist/img/green_sky_back.png",   //x-
+            "dist/img/green_sky_left.png",   //y+
+            "dist/img/green_sky_right.png",  //y-
+            "dist/img/green_sky_bottom.png", //z+
+            "dist/img/green_sky_top.png",    //z-
         ]
         this.sky_texture = new CubeMapMaterial();
         await this.sky_texture.initialize(this.device, urls);
@@ -375,7 +376,8 @@ export class Renderer {
             sphereData[8*i + 6] = this.scene.spheres[i].color[2];
             sphereData[8*i + 7] = this.scene.spheres[i].radius;
         }
-        this.device.queue.writeBuffer(this.sphereBuffer, 0, sphereData, 0, 8 * this.scene.sphereCount);
+        this.device.queue.writeBuffer(this.sphereBuffer, 0,
+            <ArrayBuffer>(<unknown>sphereData), 0, 8 * this.scene.sphereCount);
 
         const nodeData: Float32Array = new Float32Array(8 * this.scene.nodesUsed);
         for (let i = 0; i < this.scene.nodesUsed; i++) {
@@ -388,13 +390,15 @@ export class Renderer {
             nodeData[8*i + 6] = this.scene.nodes[i].maxCorner[2];
             nodeData[8*i + 7] = this.scene.nodes[i].sphereCount;
         }
-        this.device.queue.writeBuffer(this.nodeBuffer, 0, nodeData, 0, 8 * this.scene.nodesUsed);
+        this.device.queue.writeBuffer(this.nodeBuffer, 0,
+            <ArrayBuffer>(<unknown>nodeData), 0, 8 * this.scene.nodesUsed);
 
         const sphereIndexData: Float32Array = new Float32Array(this.scene.sphereCount);
         for (let i = 0; i < this.scene.sphereCount; i++) {
             sphereIndexData[i] = this.scene.sphereIndices[i];
         }
-        this.device.queue.writeBuffer(this.sphereIndexBuffer, 0, sphereIndexData, 0, this.scene.sphereCount);
+        this.device.queue.writeBuffer(this.sphereIndexBuffer, 0,
+            <ArrayBuffer>(<unknown>sphereIndexData), 0, this.scene.sphereCount);
     }
 
     render = () => {
