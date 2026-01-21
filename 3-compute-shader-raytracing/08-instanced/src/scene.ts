@@ -35,20 +35,7 @@ export class Scene {
             }
         }
         
-<<<<<<< HEAD
         this.camera = new Camera([-6.0, 0.0, -1.0]);
-=======
-       /*
-       this.statues = [];
-       for (let x = -1; x < 2; x++) {
-            for (let y = -1; y < 2; y++) {
-                this.statues.push(new Statue([4 * x, 4 * y, 0], [0, 0, 90]))
-            }
-       }
-       */
-        
-        this.camera = new Camera([-5.0, 0.0, -1.0]);
->>>>>>> ddd8c4f3d82c41ae8afe7bffc9e77a518e047730
     }
 
     async make_scene() {

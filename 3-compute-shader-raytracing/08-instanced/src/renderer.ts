@@ -248,12 +248,12 @@ export class Renderer {
         );
 
         const urls = [
-            "dist/gfx/sky_front.png",  //x+
-            "dist/gfx/sky_back.png",   //x-
-            "dist/gfx/sky_left.png",   //y+
-            "dist/gfx/sky_right.png",  //y-
-            "dist/gfx/sky_bottom.png", //z+
-            "dist/gfx/sky_top.png",    //z-
+            "dist/img/green_sky_front.png",  //x+
+            "dist/img/green_sky_back.png",   //x-
+            "dist/img/green_sky_left.png",   //y+
+            "dist/img/green_sky_right.png",  //y-
+            "dist/img/green_sky_bottom.png", //z+
+            "dist/img/green_sky_top.png",    //z-
         ]
         this.sky_texture = new CubeMapMaterial();
         await this.sky_texture.initialize(this.device, urls);
@@ -418,20 +418,24 @@ export class Renderer {
         const blasDescriptionData: Float32Array = new Float32Array(20 * this.scene.blasDescriptions.length);
         for (let i = 0; i < this.scene.blasDescriptions.length; i++) {
             for (let j = 0; j < 16; j++) {
-                blasDescriptionData[20 * i + j] = <number>this.scene.blasDescriptions[i].inverseModel.at(j);
+                blasDescriptionData[20 * i + j] = <number>this.scene.blasDescriptions[i].inverseModel[j];
             }
             blasDescriptionData[20 * i + 16] = this.scene.blasDescriptions[i].rootNodeIndex;
             blasDescriptionData[20 * i + 17] = this.scene.blasDescriptions[i].rootNodeIndex;
             blasDescriptionData[20 * i + 18] = this.scene.blasDescriptions[i].rootNodeIndex;
             blasDescriptionData[20 * i + 19] = this.scene.blasDescriptions[i].rootNodeIndex;
         }
-        this.device.queue.writeBuffer(this.blasDescriptionBuffer, 0, blasDescriptionData, 0, 20 * this.scene.blasDescriptions.length);
+        this.device.queue.writeBuffer(this.blasDescriptionBuffer, 0,
+            <ArrayBuffer>(<unknown>blasDescriptionData),
+            0, 20 * this.scene.blasDescriptions.length);
 
-        const blasIndexData: Float32Array = new Float32Array(this.scene.blasIndices.length);
+        const blasIndexData: Uint32Array = new Uint32Array(this.scene.blasIndices.length);
         for (let i = 0; i < this.scene.blasIndices.length; i++) {
             blasIndexData[i] = this.scene.blasIndices[i];
         }
-        this.device.queue.writeBuffer(this.blasIndexBuffer, 0, blasIndexData, 0, this.scene.blasIndices.length);
+        this.device.queue.writeBuffer(this.blasIndexBuffer, 0,
+            <ArrayBuffer>(<unknown>blasIndexData),
+            0, this.scene.blasIndices.length);
 
         //Write the tlas nodes
         var nodeData_a: Float32Array = new Float32Array(8 * (this.scene.nodesUsed));
@@ -445,7 +449,9 @@ export class Renderer {
             nodeData_a[8*i + 6] = this.scene.nodes[i].maxCorner[2];
             nodeData_a[8*i + 7] = this.scene.nodes[i].primitiveCount;
         }
-        this.device.queue.writeBuffer(this.nodeBuffer, 0, nodeData_a, 0, 8 * this.scene.nodesUsed);
+        this.device.queue.writeBuffer(this.nodeBuffer, 0,
+            <ArrayBuffer>(<unknown>nodeData_a),
+            0, 8 * this.scene.nodesUsed);
 
         if (this.loaded) {
             return;
@@ -469,7 +475,9 @@ export class Renderer {
             }
             triangleData[28*i + 27] = 0.0;
         }
-        this.device.queue.writeBuffer(this.triangleBuffer, 0, triangleData, 0, 28 * this.scene.triangles.length);
+        this.device.queue.writeBuffer(this.triangleBuffer, 0,
+            <ArrayBuffer>(<unknown>triangleData),
+            0, 28 * this.scene.triangles.length);
 
         //Write blas data
         var nodeData_b = new Float32Array(8 * (this.scene.statue_mesh.nodesUsed));
@@ -489,11 +497,13 @@ export class Renderer {
         let bufferOffset: number = 32 * this.scene.tlasNodesMax;
         this.device.queue.writeBuffer(this.nodeBuffer, bufferOffset, nodeData_b, 0, 8 * this.scene.statue_mesh.nodesUsed);
 
-        const triangleIndexData: Float32Array = new Float32Array(this.scene.triangles.length);
+        const triangleIndexData: Uint32Array = new Uint32Array(this.scene.triangles.length);
         for (let i = 0; i < this.scene.triangles.length; i++) {
             triangleIndexData[i] = this.scene.triangleIndices[i];
         }
-        this.device.queue.writeBuffer(this.triangleIndexBuffer, 0, triangleIndexData, 0, this.scene.triangles.length);
+        this.device.queue.writeBuffer(this.triangleIndexBuffer, 0,
+            <ArrayBuffer>(<unknown>triangleIndexData),
+            0, this.scene.triangles.length);
     }
 
     render = () => {

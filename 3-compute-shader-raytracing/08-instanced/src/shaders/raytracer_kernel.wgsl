@@ -46,7 +46,7 @@ struct blasDescriptions {
 }
 
 struct ObjectIndices {
-    primitiveIndices: array<f32>,
+    primitiveIndices: array<u32>,
 }
 
 struct Ray {
@@ -283,7 +283,7 @@ fn trace_blas(
         
                 var newRenderState: RenderState = hit_triangle(
                     object_ray, 
-                    objects.triangles[u32(triangleLookup.primitiveIndices[i + contents])], 
+                    objects.triangles[triangleLookup.primitiveIndices[i + contents]], 
                     0.001, blasNearestHit, blasRenderState
                 );
 
