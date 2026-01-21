@@ -214,12 +214,12 @@ export class Renderer {
         );
 
         const urls = [
-            "dist/gfx/sky_front.png",  //x+
-            "dist/gfx/sky_back.png",   //x-
-            "dist/gfx/sky_left.png",   //y+
-            "dist/gfx/sky_right.png",  //y-
-            "dist/gfx/sky_bottom.png", //z+
-            "dist/gfx/sky_top.png",    //z-
+            "dist/img/green_sky_front.png",  //x+
+            "dist/img/green_sky_back.png",   //x-
+            "dist/img/green_sky_left.png",   //y+
+            "dist/img/green_sky_right.png",  //y-
+            "dist/img/green_sky_bottom.png", //z+
+            "dist/img/green_sky_top.png",    //z-
         ]
         this.sky_texture = new CubeMapMaterial();
         await this.sky_texture.initialize(this.device, urls);
@@ -371,7 +371,8 @@ export class Renderer {
                 ]
             ), 0, 16
         )
-        this.device.queue.writeBuffer(this.sceneParameters, 64, <ArrayBuffer>sceneData.inverseModel);
+        this.device.queue.writeBuffer(this.sceneParameters, 64,
+            <ArrayBuffer>(<unknown>sceneData.inverseModel));
 
         if (this.loaded) {
             return;
@@ -395,7 +396,9 @@ export class Renderer {
             }
             triangleData[28*i + 27] = 0.0;
         }
-        this.device.queue.writeBuffer(this.triangleBuffer, 0, triangleData, 0, 28 * this.scene.triangleCount);
+        this.device.queue.writeBuffer(this.triangleBuffer, 0,
+            <ArrayBuffer>(<unknown>triangleData),
+            0, 28 * this.scene.triangleCount);
 
         const nodeData: Float32Array = new Float32Array(8 * this.scene.nodesUsed);
         for (let i = 0; i < this.scene.nodesUsed; i++) {
@@ -408,13 +411,17 @@ export class Renderer {
             nodeData[8*i + 6] = this.scene.nodes[i].maxCorner[2];
             nodeData[8*i + 7] = this.scene.nodes[i].primitiveCount;
         }
-        this.device.queue.writeBuffer(this.nodeBuffer, 0, nodeData, 0, 8 * this.scene.nodesUsed);
+        this.device.queue.writeBuffer(this.nodeBuffer, 0,
+            <ArrayBuffer>(<unknown>nodeData),
+            0, 8 * this.scene.nodesUsed);
 
-        const triangleIndexData: Float32Array = new Float32Array(this.scene.triangleCount);
+        const triangleIndexData: Uint32Array = new Uint32Array(this.scene.triangleCount);
         for (let i = 0; i < this.scene.triangleCount; i++) {
             triangleIndexData[i] = this.scene.triangleIndices[i];
         }
-        this.device.queue.writeBuffer(this.triangleIndexBuffer, 0, triangleIndexData, 0, this.scene.triangleCount);
+        this.device.queue.writeBuffer(this.triangleIndexBuffer, 0,
+            <ArrayBuffer>(<unknown>triangleIndexData),
+            0, this.scene.triangleCount);
     }
 
     render = () => {
@@ -431,8 +438,8 @@ export class Renderer {
         ray_trace_pass.setPipeline(this.ray_tracing_pipeline);
         ray_trace_pass.setBindGroup(0, this.ray_tracing_bind_group);
         ray_trace_pass.dispatchWorkgroups(
-            this.canvas.width, 
-            this.canvas.height, 1
+            this.canvas.width / 8, 
+            this.canvas.height / 8, 1
         );
         ray_trace_pass.end();
 

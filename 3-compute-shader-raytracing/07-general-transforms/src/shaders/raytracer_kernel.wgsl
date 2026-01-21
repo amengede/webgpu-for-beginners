@@ -37,7 +37,7 @@ struct BVH {
 }
 
 struct ObjectIndices {
-    primitiveIndices: array<f32>,
+    primitiveIndices: array<u32>,
 }
 
 struct Ray {
@@ -71,7 +71,7 @@ struct RenderState {
 @group(0) @binding(5) var skyTexture: texture_cube<f32>;
 @group(0) @binding(6) var skySampler: sampler;
 
-@compute @workgroup_size(1,1,1)
+@compute @workgroup_size(8,8,1)
 fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
 
     let screen_size: vec2<i32> = vec2<i32>(textureDimensions(color_buffer));
@@ -191,7 +191,7 @@ fn trace(ray: Ray) -> RenderState {
         
                 var newRenderState: RenderState = hit_triangle(
                     ray, 
-                    objects.triangles[u32(triangleLookup.primitiveIndices[i + contents])], 
+                    objects.triangles[triangleLookup.primitiveIndices[i + contents]], 
                     0.001, nearestHit, renderState
                 );
 
