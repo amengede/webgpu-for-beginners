@@ -121,7 +121,8 @@ export class Buffer {
         let host_memory = this.hostMemories[coarse_index];
         let host_offset = 0;
         let host_size = host_memory.length;
-        this.device.queue.writeBuffer(this.deviceMemory, buffer_offset, host_memory, host_offset, host_size);
+        this.device.queue.writeBuffer(this.deviceMemory, buffer_offset,
+            <ArrayBuffer>(<unknown>host_memory), host_offset, host_size);
     }
 
     get_fine_partition(coarse_index: number, fine_index: number): Partition {
@@ -153,7 +154,8 @@ export class Buffer {
         let src_size = fine_partition.size;
         let host_memory = this.hostMemories[coarse_index];
 
-        this.device.queue.writeBuffer(this.deviceMemory, buffer_offset, host_memory, src_offset, src_size);
+        this.device.queue.writeBuffer(this.deviceMemory, buffer_offset,
+            <ArrayBuffer>(<unknown>host_memory), src_offset, src_size);
     }
     
 }

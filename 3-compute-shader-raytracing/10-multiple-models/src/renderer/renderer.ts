@@ -27,7 +27,8 @@ export class Renderer {
     color_buffer_view: GPUTextureView;
     sampler: GPUSampler;
     sceneParameters: Buffer;
-    triangleBuffer: Buffer;
+    triangleGeometryBuffer: Buffer;
+    triangleAttributeBuffer: Buffer;
     nodeBuffer: Buffer;
     blasDescriptionBuffer: Buffer;
     triangleIndexBuffer: Buffer;
@@ -111,6 +112,7 @@ export class Renderer {
         this.ray_tracing_pipeline.addBuffer('read-only-storage');
         this.ray_tracing_pipeline.addBuffer('read-only-storage');
         this.ray_tracing_pipeline.addImageCube();
+        this.ray_tracing_pipeline.addBuffer('read-only-storage');
         await this.ray_tracing_pipeline.makeBindGroupLayout();
 
         this.screen_pipeline.addImage2D();
@@ -163,12 +165,12 @@ export class Renderer {
         this.blasDescriptionBuffer.Initialize();
 
         const urls = [
-            "dist/gfx/sky_front.png",  //x+
-            "dist/gfx/sky_back.png",   //x-
-            "dist/gfx/sky_left.png",   //y+
-            "dist/gfx/sky_right.png",  //y-
-            "dist/gfx/sky_bottom.png", //z+
-            "dist/gfx/sky_top.png",    //z-
+            "dist/img/green_sky_front.png",  //x+
+            "dist/img/green_sky_back.png",   //x-
+            "dist/img/green_sky_left.png",   //y+
+            "dist/img/green_sky_right.png",  //y-
+            "dist/img/green_sky_bottom.png", //z+
+            "dist/img/green_sky_top.png",    //z-
         ]
         this.sky_texture = new CubeMapMaterial();
         await this.sky_texture.initialize(this.device, urls);
@@ -288,11 +290,11 @@ export class Renderer {
             triangle_count += mesh.triangles.length;
         }
 
-        this.triangleBuffer = new Buffer(this.device);
-        let size = 4 * 28 * triangle_count;
+        this.triangleGeometryBuffer = new Buffer(this.device);
+        let size = 4 * 12 * triangle_count;
         let usage = GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST;
-        this.triangleBuffer.add_coarse_partition(size, usage);
-        this.triangleBuffer.Initialize();
+        this.triangleGeometryBuffer.add_coarse_partition(size, usage);
+        this.triangleGeometryBuffer.Initialize();
 
         // Upload mesh triangles
         let blit_offset = 0;
@@ -306,12 +308,36 @@ export class Renderer {
 
             for (let i = 0; i < mesh.triangles.length; i++) {
                 mesh.triangles[i].flatten()
-                this.triangleBuffer.blit_to_coarse_partition(
-                    coarse_index, mesh.triangles[i].data, blit_offset);
-                blit_offset += 28;
+                this.triangleGeometryBuffer.blit_to_coarse_partition(
+                    coarse_index, mesh.triangles[i].geometry_data, blit_offset);
+                blit_offset += 12;
             }
         }
-        this.triangleBuffer.upload_coarse_partition(coarse_index);
+        this.triangleGeometryBuffer.upload_coarse_partition(coarse_index);
+
+        this.triangleAttributeBuffer = new Buffer(this.device);
+        size = 4 * 16 * triangle_count;
+        this.triangleAttributeBuffer.add_coarse_partition(size, usage);
+        this.triangleAttributeBuffer.Initialize();
+
+        // Upload mesh triangles
+        blit_offset = 0;
+        coarse_index = this.coarse_indices.get(COARSE_PARTITION_TYPE.NODES)!;
+        for (let i = 1; i < object_type_count + 1; i++) {
+            let object_type: FINE_PARTITION_TYPE = FINE_PARTITION_TYPE.TLAS + i;
+            let mesh = this.meshes.get(object_type)!;
+            //console.log("Triangle count: %d", mesh.triangles.length);
+            //console.log(mesh.triangles);
+            //console.log(filenames.get(object_type));
+
+            for (let i = 0; i < mesh.triangles.length; i++) {
+                mesh.triangles[i].flatten()
+                this.triangleAttributeBuffer.blit_to_coarse_partition(
+                    coarse_index, mesh.triangles[i].attribute_data, blit_offset);
+                blit_offset += 16;
+            }
+        }
+        this.triangleAttributeBuffer.upload_coarse_partition(coarse_index);
     }
 
     async makeBindGroups() {
@@ -332,7 +358,7 @@ export class Renderer {
                 {
                     binding: 2,
                     resource: {
-                        buffer: this.triangleBuffer.deviceMemory,
+                        buffer: this.triangleGeometryBuffer.deviceMemory,
                     }
                 },
                 {
@@ -364,6 +390,12 @@ export class Renderer {
                 {
                     binding: 7,
                     resource: this.sky_texture.sampler,
+                },
+                {
+                    binding: 8,
+                    resource: {
+                        buffer: this.triangleAttributeBuffer.deviceMemory,
+                    }
                 },
             ]
         });

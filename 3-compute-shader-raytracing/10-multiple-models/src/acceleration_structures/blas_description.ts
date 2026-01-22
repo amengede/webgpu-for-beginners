@@ -42,7 +42,7 @@ export class BlasDescription {
         this.data = new Float32Array(20);
 
         for (let j = 0; j < 16; j++) {
-            this.data[j] = <number>this.inverseModel.at(j);
+            this.data[j] = this.inverseModel[j];
         }
         this.data[16] = root_node;
         this.data[17] = root_node;

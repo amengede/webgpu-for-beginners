@@ -7,13 +7,16 @@ struct Sphere {
 struct Triangle {
     corner_a: vec3<f32>,
     //float
-    normal_a: vec3<f32>,
-    //float
     corner_b: vec3<f32>,
     //float
-    normal_b: vec3<f32>,
-    //float
     corner_c: vec3<f32>,
+    //float
+}
+
+struct TriangleAttribute {
+    normal_a: vec3<f32>,
+    //float
+    normal_b: vec3<f32>,
     //float
     normal_c: vec3<f32>,
     //float
@@ -23,6 +26,10 @@ struct Triangle {
 
 struct PrimitiveData {
     triangles: array<Triangle>,
+}
+
+struct PrimitiveAttributeData {
+    triangleAttributes: array<TriangleAttribute>,
 }
 
 struct Node {
@@ -63,9 +70,9 @@ struct SceneData {
 }
 
 struct RenderState {
-    color: vec3<f32>,
+    wuv: vec3<f32>,
+    indices: vec2<u32>,
     t: f32,
-    normal: vec3<f32>,
     hit: bool,
 }
 
@@ -77,6 +84,7 @@ struct RenderState {
 @group(0) @binding(5) var<storage, read> lookup: ObjectIndices;
 @group(0) @binding(6) var skyTexture: texture_cube<f32>;
 @group(0) @binding(7) var skySampler: sampler;
+@group(0) @binding(8) var<storage, read> objectAttributes: PrimitiveAttributeData;
 
 const epsilon: f32 = 0.0000001;
 
@@ -123,11 +131,21 @@ fn rayColor(ray: Ray) -> vec3<f32> {
         }
 
         //unpack color
-        color = color * result.color;
+        let description: blasDescription = blas.descriptions[result.indices[0]];
+        let attributes: TriangleAttribute = objectAttributes.triangleAttributes[result.indices[1]];
+        color = color * attributes.color;
+
+        var normal: vec3<f32> = result.wuv[0] * attributes.normal_a
+            + result.wuv[1] * attributes.normal_b
+            + result.wuv[2] * attributes.normal_c;
+        
+        normal = normalize(
+            (transpose(description.inverseModel) * vec4(normal, 0.0)).xyz
+        );
 
         //Set up for next trace
         world_ray.origin = world_ray.origin + result.t * world_ray.direction;
-        world_ray.direction = normalize(reflect(world_ray.direction, result.normal));
+        world_ray.direction = normalize(reflect(world_ray.direction, normal));
     }
 
     //Rays which reached terminal state and bounced indefinitely
@@ -193,7 +211,7 @@ fn trace_tlas(ray: Ray) -> RenderState {
         
                 var newRenderState: RenderState = trace_blas(
                     ray, 
-                    blas.descriptions[u32(lookup.indices[i + contents])], 
+                    u32(lookup.indices[i + contents]), 
                     nearestHit,
                     renderState
                 );
@@ -219,9 +237,11 @@ fn trace_tlas(ray: Ray) -> RenderState {
 
 fn trace_blas(
     ray: Ray, 
-    description: blasDescription,
+    index: u32,
     nearestHit: f32,
     renderState: RenderState) -> RenderState {
+
+    let description: blasDescription = blas.descriptions[index];
 
     var object_ray: Ray;
     object_ray.origin = (description.inverseModel * vec4<f32>(ray.origin, 1.0)).xyz;
@@ -230,8 +250,8 @@ fn trace_blas(
     //Set up the Render State
     var blasRenderState: RenderState;
     blasRenderState.t = renderState.t;
-    blasRenderState.normal = renderState.normal;
-    blasRenderState.color = renderState.color;
+    blasRenderState.wuv = renderState.wuv;
+    blasRenderState.indices = renderState.indices;
     blasRenderState.hit = false;
 
     var blasNearestHit: f32 = nearestHit;
@@ -284,7 +304,7 @@ fn trace_blas(
         
                 var newRenderState: RenderState = hit_triangle(
                     object_ray, 
-                    objects.triangles[u32(lookup.indices[i + contents])], 
+                    u32(lookup.indices[i + contents]), 
                     epsilon, blasNearestHit, blasRenderState
                 );
 
@@ -305,49 +325,22 @@ fn trace_blas(
     }
 
     if (blasRenderState.hit) {
-        blasRenderState.normal = normalize(
-            (transpose(description.inverseModel) * vec4(blasRenderState.normal, 0.0)).xyz
-        );
+        blasRenderState.indices[0] = index;
     }
 
     return blasRenderState;
 }
 
-fn hit_sphere(ray: Ray, sphere: Sphere, tMin: f32, oldRenderState: RenderState) -> RenderState {
-    
-    let co: vec3<f32> = ray.origin - sphere.center;
-    let a: f32 = dot(ray.direction, ray.direction);
-    let b: f32 = 2.0 * dot(ray.direction, co);
-    let c: f32 = dot(co, co) - sphere.radius * sphere.radius;
-    let discriminant: f32 = b * b - 4.0 * a * c;
-
-    var renderState: RenderState;
-    renderState.color = oldRenderState.color;
-
-    if (discriminant > 0.0) {
-
-        let t: f32 = (-b - sqrt(discriminant)) / (2 * a);
-
-        if (t > tMin && t < oldRenderState.t) {
-            renderState.t = t;
-            renderState.color = sphere.color;
-            renderState.hit = true;
-            return renderState;
-        }
-    }
-
-    renderState.hit = false;
-    return renderState;
-    
-}
-
 fn hit_triangle(
-    ray: Ray, tri: Triangle, 
+    ray: Ray, index: u32, 
     tMin: f32, tMax:f32,
     oldRenderState: RenderState) -> RenderState {
 
+    let tri: Triangle = objects.triangles[index];
+
     var renderState: RenderState;
-    renderState.color = oldRenderState.color;
+    renderState.wuv = oldRenderState.wuv;
+    renderState.indices = oldRenderState.indices;
     renderState.hit = false;
 
     //Direction vectors
@@ -406,8 +399,8 @@ fn hit_triangle(
     let t: f32 = determinant(system_matrix) / denominator;
 
     if (t > tMin && t < tMax) {
-        renderState.normal = (1.0 - u - v) * tri.normal_a + u * tri.normal_b + v * tri.normal_c;
-        renderState.color = tri.color;
+        renderState.wuv = vec3<f32>(1.0 - u - v, u, v);
+        renderState.indices[1] = index;
         renderState.t = t;
         renderState.hit = true;
         return renderState;

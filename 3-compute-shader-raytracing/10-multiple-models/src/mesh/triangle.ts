@@ -7,12 +7,14 @@ export class Triangle {
     normals: vec3[]
     color: vec3
     centroid: vec3
-    data: Float32Array
+    geometry_data: Float32Array
+    attribute_data: Float32Array
 
     constructor() {
         this.corners = [];
         this.normals = [];
-        this.data = new Float32Array(28);
+        this.geometry_data = new Float32Array(12);
+        this.attribute_data = new Float32Array(16);
     }
 
     build_from_center_and_offsets(center: vec3, offsets: vec3[], color: vec3) {
@@ -61,33 +63,22 @@ export class Triangle {
 
         this.color = color;
 
-        for (var corner = 0; corner < 3; corner++) {
-            this.data[8 * corner]     = this.corners[corner][0];
-            this.data[8 * corner + 1] = this.corners[corner][1];
-            this.data[8 * corner + 2] = this.corners[corner][2];
-
-            this.data[8 * corner + 4] = this.normals[corner][0];
-            this.data[8 * corner + 5] = this.normals[corner][1];
-            this.data[8 * corner + 6] = this.normals[corner][2];
-        }
-        for (var channel = 0; channel < 3; channel++) {
-            this.data[24 + channel] = this.color[channel];
-        }
+        this.flatten();
     }
 
     flatten() {
         //console.log(this);
         for (var corner = 0; corner < 3; corner++) {
-            this.data[8 * corner]     = this.corners[corner][0];
-            this.data[8 * corner + 1] = this.corners[corner][1];
-            this.data[8 * corner + 2] = this.corners[corner][2];
+            this.geometry_data[4 * corner]     = this.corners[corner][0];
+            this.geometry_data[4 * corner + 1] = this.corners[corner][1];
+            this.geometry_data[4 * corner + 2] = this.corners[corner][2];
 
-            this.data[8 * corner + 4] = this.normals[corner][0];
-            this.data[8 * corner + 5] = this.normals[corner][1];
-            this.data[8 * corner + 6] = this.normals[corner][2];
+            this.attribute_data[4 * corner]     = this.normals[corner][0];
+            this.attribute_data[4 * corner + 1] = this.normals[corner][1];
+            this.attribute_data[4 * corner + 2] = this.normals[corner][2];
         }
         for (var channel = 0; channel < 3; channel++) {
-            this.data[24 + channel] = this.color[channel];
+            this.attribute_data[12 + channel] = this.color[channel];
         }
     }
 
